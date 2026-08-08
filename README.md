@@ -3,7 +3,9 @@
 **Static evaluation of model switching in LLM agents scores the wrong world.**
 
 Accepted at the [Efficient Reasoning Workshop @ COLM 2026](https://wdlctc.github.io/efficient-reasoning-2026/) ·
-[Paper / reviews on OpenReview](https://openreview.net/forum?id=8gqqiNrzyA)
+[Paper](https://openreview.net/forum?id=8gqqiNrzyA) ·
+[Project page](https://ashrithag.github.io/replay-gap/) ·
+[Dataset](https://huggingface.co/datasets/ashritha0907/replay-gap-trajectories)
 
 Every LLM-routing benchmark scores routers by replaying pre-collected model
 outputs. In a multi-step agent that is unsound: swap the model at step *k* and
@@ -80,8 +82,19 @@ python scripts/aggregate_outcomes.py runs/pilot . rg
 ## Dataset
 
 The full branched-trajectory dataset (~900 rollouts: base and fork trajectories,
-per-step actions and observations, token counts, exit statuses, patches, and
-outcomes) is released separately — see the OpenReview page for the current link.
+per-step actions and observations, fork metadata, replay-fidelity logs, token
+counts, exit statuses, patches, and SWE-bench outcomes) is on HuggingFace:
+**[ashritha0907/replay-gap-trajectories](https://huggingface.co/datasets/ashritha0907/replay-gap-trajectories)**
+
+```python
+from datasets import load_dataset
+
+# one run pair (base = 4B, swapping up to 14B, full difficulty)
+ds = load_dataset("ashritha0907/replay-gap-trajectories", data_files="pilot30.jsonl.gz")
+
+# or the light index, without message bodies
+idx = load_dataset("ashritha0907/replay-gap-trajectories", data_files="rollouts_index.jsonl.gz")
+```
 
 ## Citation
 

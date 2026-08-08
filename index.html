@@ -95,7 +95,7 @@ footer a{color:var(--ink-2)}
   <nav class="links">
     <a href="https://openreview.net/forum?id=8gqqiNrzyA">Paper</a>
     <a href="https://github.com/AshrithaG/replay-gap">Code</a>
-    <a href="#data" class="muted">Dataset</a>
+    <a href="https://huggingface.co/datasets/ashritha0907/replay-gap-trajectories">Dataset</a>
     <a href="#results">Results</a>
   </nav>
 </header>
@@ -182,10 +182,15 @@ footer a{color:var(--ink-2)}
   <p>The branching harness, all experiment configs, and every analysis script that produced the numbers
   above are on <a href="https://github.com/AshrithaG/replay-gap">GitHub</a>. The full branched-trajectory
   dataset — ~900 rollouts with per-step actions, observations, fork metadata, replay-fidelity logs, token
-  counts, patches, and SWE-bench outcomes — is released alongside it.</p>
+  counts, patches, and SWE-bench outcomes — is on
+  <a href="https://huggingface.co/datasets/ashritha0907/replay-gap-trajectories">HuggingFace</a>.</p>
 <pre><code>git clone https://github.com/AshrithaG/replay-gap
 cd replay-gap &amp;&amp; pip install -r requirements.txt
-python scripts/smoke_test.py    # validates the branching machinery, no GPU needed</code></pre>
+python scripts/smoke_test.py    # validates the branching machinery, no GPU needed
+
+# the trajectories
+from datasets import load_dataset
+ds = load_dataset("ashritha0907/replay-gap-trajectories", data_files="pilot30.jsonl.gz")</code></pre>
   <p>It is a deliberately controlled pilot: one scaffold, one benchmark family, two quantized models,
   n=30 instances per run pair, and a 24GB serving budget that keeps absolute resolution rates low. The
   action-level results don't depend on task success; the outcome-level evidence rests on five events and

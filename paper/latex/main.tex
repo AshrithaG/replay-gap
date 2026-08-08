@@ -26,7 +26,8 @@ Carnegie Mellon University \\
 \begin{center}
 \vspace{-1.5em}
 \small Accepted at the Efficient Reasoning Workshop, COLM 2026.\\
-Code and data: \url{https://github.com/AshrithaG/replay-gap}
+Code: \url{https://github.com/AshrithaG/replay-gap} \quad
+Data: \url{https://huggingface.co/datasets/ashritha0907/replay-gap-trajectories}
 \end{center}
 
 \begin{abstract}
@@ -162,7 +163,7 @@ Raw outcome agreement is 97--100\% --- and vacuous, since predicting universal f
 This is a deliberately controlled pilot: one scaffold, one benchmark family, one model family (two quantized members), $n{=}30$ instances per run pair at temperature 0, and a 24\,GB serving budget (28k context) that keeps absolute resolution rates low (0--3\%). Action-level divergence and the one-sided flip evidence do not require competent agents to be valid --- replayed states are off-distribution regardless of task success --- but we show the \emph{inputs} to replay evaluation are invalid rather than demonstrating end-to-end router mis-ranking; measuring mis-ranking in competent regimes, with unquantized pools and a third fork position, is the immediate next step alongside OPE-corrected estimators. Quantization differences (FP8 vs AWQ) entangle model capability with serving stack --- our up/down comparisons are therefore between \emph{deployment configurations}, not pure model scales. Prefix replay assumes command-level environment determinism, which we verify rather than assume (99.99\% return-code agreement over 11{,}702 replayed actions; Appendix~\ref{app:fidelity}), and the branch model inherits the base model's in-context style through the replayed prefix, which is part of the phenomenon rather than an artifact, but merits study.
 
 \section*{Reproducibility}
-The branching harness, all run configurations, and every analysis script behind the numbers in this paper are prepared in anonymized form; as the venue's submission form accepts no supplementary files, we will share them through an anonymized link during the discussion phase if permitted, and release them --- together with the full $\sim$900-rollout trajectory dataset (forks, per-step actions, token counts, outcomes) --- upon publication.
+The branching harness, all run configurations, and every analysis script behind the numbers in this paper are released at \url{https://github.com/AshrithaG/replay-gap}, and the full $\sim$900-rollout branched-trajectory dataset (base and fork trajectories, per-step actions and observations, fork metadata, replay-fidelity logs, token counts, patches, and SWE-bench outcomes) at \url{https://huggingface.co/datasets/ashritha0907/replay-gap-trajectories}.
 
 \bibliography{refs}
 \bibliographystyle{colm2026_conference}
