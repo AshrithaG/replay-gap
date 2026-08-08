@@ -1,5 +1,7 @@
 \documentclass{article}
-\usepackage[submission]{colm2026_conference}
+% [submission] = anonymous + line numbers (review). [preprint] = named, for
+% the camera-ready and the arXiv posting.
+\usepackage[preprint]{colm2026_conference}
 
 \usepackage{microtype}
 \usepackage{xcolor}
@@ -14,11 +16,18 @@
 
 \title{The Replay Gap: Static Evaluation of Model\\Switching in LLM Agents Scores the Wrong World}
 
-% Anonymized by the "submission" option; author metadata lives in OpenReview.
-\author{Anonymous authors}
+\author{Ashritha Gonuguntla \\
+Carnegie Mellon University \\
+\texttt{agonugun@andrew.cmu.edu}}
 
 \begin{document}
 \maketitle
+
+\begin{center}
+\vspace{-1.5em}
+\small Accepted at the Efficient Reasoning Workshop, COLM 2026.\\
+Code and data: \url{https://github.com/AshrithaG/replay-gap}
+\end{center}
 
 \begin{abstract}
 LLM routers promise efficiency by matching each request to the cheapest adequate model, and are increasingly applied \emph{per step} inside multi-step agents. Yet agentic routers are evaluated like single-turn routers: by replaying logged trajectories and substituting another model's recorded outputs, assuming the rest of the trajectory is unaffected. We test this assumption with \emph{branching rollouts}: we fork live SWE-bench agent trajectories at controlled points, rebuild the environment, continue each fork with a different model, and compare against same-model control forks that isolate sampling and replay noise. Across six paired runs ($\sim$900 rollouts), swaps exceed their matched control floors by $+0.25$ to $+0.66$ normalized edit distance (multiplicity-corrected CIs exclude zero), rewriting 61--94\% of post-fork actions; 74--77\% of early swaps diverge at the \emph{first} post-fork action, versus 6--35\% of controls --- leaving only 3\% of replayed states valid. Divergence decreases with fork depth in both directions. All five outcome flips we observe occur in swap arms --- upgrades rescuing unsolved instances, a downgrade losing the sole solve --- and zero occur across 359 control forks. Scoring these same swaps with a log-stitching replay evaluator, replay mispredicts \emph{every} success-relevant outcome call and predicts patches with 0.00--0.11 similarity to reality. Auditing the noise floor, temperature-0 ``determinism'' is configuration-dependent: FP8-served controls diverge on over 90\% of forks while AWQ-served ones remain near-identical; and under tight budgets the \emph{stronger} model more often exhausts its steps without submitting. Replay-based benchmarks score the wrong world for agentic routing; we release our harness and all trajectories.
