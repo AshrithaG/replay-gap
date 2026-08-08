@@ -12,10 +12,26 @@ compact rollouts_index.jsonl without message bodies for quick browsing.
 """
 
 import json
+import os
 import re
 from pathlib import Path
 
 BRANCH_RE = re.compile(r"branch_(?P<alias>.+)_k(?P<k>\d+)\.traj\.json")
+
+# Host tracebacks (e.g. context-window errors) can embed the machine's home
+# directory in observation messages. Scrub it before release.
+HOST_HOME_RE = re.compile(re.escape(f"/home/{os.environ.get('USER', '__nouser__')}"))
+
+
+def scrub(obj):
+    """Recursively replace the host home directory with a neutral placeholder."""
+    if isinstance(obj, str):
+        return HOST_HOME_RE.sub("/home/user", obj)
+    if isinstance(obj, list):
+        return [scrub(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: scrub(v) for k, v in obj.items()}
+    return obj
 
 # run -> (swap direction, harness run-id prefix used when scoring)
 RUNS = {
@@ -100,7 +116,7 @@ def main() -> None:
                         else None,
                         "messages": messages,
                     }
-                    f.write(json.dumps(row) + "\n")
+                    f.write(json.dumps(scrub(row)) + "\n")
                     index_row = {k: v for k, v in row.items() if k not in ("messages", "replay_fidelity", "patch")}
                     index_row["patch_len"] = len(row["patch"] or "")
                     index_f.write(json.dumps(index_row) + "\n")
