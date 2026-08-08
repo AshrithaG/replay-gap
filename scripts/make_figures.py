@@ -50,6 +50,12 @@ def load_rows():
     return rows
 
 
+def save(fig, name):
+    """PDF for the paper, high-DPI PNG for the project page."""
+    fig.savefig(OUT / f"{name}.pdf", bbox_inches="tight")
+    fig.savefig(OUT / f"{name}.png", bbox_inches="tight", dpi=220, transparent=True)
+
+
 def style(ax):
     ax.spines[["top", "right"]].set_visible(False)
     ax.grid(axis="y", color="#DDDDDD", linewidth=0.6, zorder=0)
@@ -78,7 +84,7 @@ def fig1(rows):
         loc="upper center", ncol=2, frameon=False, fontsize=9, bbox_to_anchor=(0.5, 1.13),
     )
     fig.tight_layout()
-    fig.savefig(OUT / "fig1_divergence.pdf", bbox_inches="tight")
+    save(fig, "fig1_divergence")
     print("fig1 saved")
 
 
@@ -100,7 +106,7 @@ def fig2(rows):
     ax.legend(frameon=False, fontsize=8.5, loc="lower right")
     style(ax)
     fig.tight_layout()
-    fig.savefig(OUT / "fig2_firstdiv.pdf", bbox_inches="tight")
+    save(fig, "fig2_firstdiv")
     print("fig2 saved")
 
 
@@ -127,7 +133,7 @@ def fig3(rows):
     ax.set_ylim(0, 1.05)
     style(ax)
     fig.tight_layout()
-    fig.savefig(OUT / "fig3_validity.pdf", bbox_inches="tight")
+    save(fig, "fig3_validity")
     print("fig3 saved")
 
 

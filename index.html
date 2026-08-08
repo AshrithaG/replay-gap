@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Replay Gap — Static Evaluation of Model Switching in LLM Agents</title>
+<meta name="description" content="Branching rollouts show that replay-based evaluation of per-step model routing in LLM agents scores states that never occur. Efficient Reasoning Workshop @ COLM 2026.">
+<meta property="og:title" content="The Replay Gap">
+<meta property="og:description" content="Replay-based evaluation of per-step model switching in LLM agents scores the wrong world.">
+<meta property="og:type" content="article">
+<style>
+:root{
+  --bg:#fbfbfa; --surface:#fff; --ink:#16161a; --ink-2:#4a4a55; --ink-3:#77777f;
+  --line:#e6e6e2; --accent:#b4451f; --accent-soft:#fdf2ed; --control:#0072B2;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#131316;--surface:#1a1a1f;--ink:#f0f0ee;--ink-2:#b6b6bf;--ink-3:#8b8b95;
+        --line:#2c2c33;--accent:#ff8a5c;--accent-soft:#2a1a13;--control:#4da3d8;}
+}
+:root[data-theme="dark"]{--bg:#131316;--surface:#1a1a1f;--ink:#f0f0ee;--ink-2:#b6b6bf;--ink-3:#8b8b95;
+  --line:#2c2c33;--accent:#ff8a5c;--accent-soft:#2a1a13;--control:#4da3d8;}
+:root[data-theme="light"]{--bg:#fbfbfa;--surface:#fff;--ink:#16161a;--ink-2:#4a4a55;--ink-3:#77777f;
+  --line:#e6e6e2;--accent:#b4451f;--accent-soft:#fdf2ed;--control:#0072B2;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:400 17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;}
+.wrap{max-width:820px;margin:0 auto;padding:0 24px}
+header{padding:72px 0 40px;border-bottom:1px solid var(--line)}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.12;letter-spacing:-.02em;margin:0 0 14px;font-weight:650}
+h1 .sub{display:block;font-size:.52em;font-weight:400;color:var(--ink-2);letter-spacing:-.01em;margin-top:12px;line-height:1.4}
+.venue{font-size:15px;color:var(--ink-2);margin:0 0 6px}
+.venue b{color:var(--ink);font-weight:600}
+.author{font-size:16px;margin:22px 0 0}
+.author a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin:28px 0 0}
+.links a{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border:1px solid var(--line);
+  border-radius:8px;background:var(--surface);color:var(--ink);text-decoration:none;font-size:14.5px;
+  font-weight:500;transition:border-color .15s,transform .15s}
+.links a:hover{border-color:var(--accent);transform:translateY(-1px)}
+.links a.muted{color:var(--ink-3)}
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-3);
+  font-weight:650;margin:0 0 18px}
+h3{font-size:19px;margin:32px 0 10px;font-weight:600;letter-spacing:-.01em}
+p{margin:0 0 16px;color:var(--ink-2)}
+p.lead{font-size:19px;color:var(--ink)}
+strong{color:var(--ink);font-weight:600}
+.tldr{background:var(--accent-soft);border-left:3px solid var(--accent);padding:18px 22px;
+  border-radius:0 8px 8px 0;margin:0 0 8px}
+.tldr p{margin:0;color:var(--ink)}
+.findings{list-style:none;padding:0;margin:0;display:grid;gap:2px}
+.findings li{padding:16px 0;border-top:1px solid var(--line);display:grid;
+  grid-template-columns:130px 1fr;gap:20px;align-items:baseline}
+.findings li:first-child{border-top:none}
+.num{font:650 27px/1 var(--mono);color:var(--accent);letter-spacing:-.02em}
+.findings p{margin:0;font-size:16px}
+figure{margin:26px 0;padding:0}
+figure img{width:100%;height:auto;display:block}
+figcaption{font-size:14px;color:var(--ink-3);margin-top:10px;line-height:1.5}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:20px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:460px}
+th,td{padding:9px 14px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:600}
+td.swap{color:var(--accent);font-weight:600}
+td.ctrl{color:var(--control)}
+code{font:14px var(--mono);background:var(--surface);border:1px solid var(--line);
+  padding:1.5px 5px;border-radius:4px}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;
+  overflow-x:auto;margin:18px 0}
+pre code{border:none;background:none;padding:0;font-size:13.5px;line-height:1.6}
+footer{padding:36px 0 72px;font-size:14.5px;color:var(--ink-3)}
+footer a{color:var(--ink-2)}
+.theme{position:fixed;top:16px;right:16px;background:var(--surface);border:1px solid var(--line);
+  color:var(--ink-2);border-radius:8px;width:36px;height:36px;font-size:15px;cursor:pointer;line-height:1}
+@media (max-width:600px){
+  header{padding:48px 0 32px}
+  .findings li{grid-template-columns:1fr;gap:4px}
+  .num{font-size:24px}
+}
+</style>
+</head>
+<body>
+<button class="theme" id="t" aria-label="Toggle theme">◐</button>
+<div class="wrap">
+
+<header>
+  <p class="venue"><b>Efficient Reasoning Workshop</b> @ COLM 2026</p>
+  <h1>The Replay Gap
+    <span class="sub">Static evaluation of model switching in LLM agents scores the wrong world</span>
+  </h1>
+  <p class="author"><a href="https://openreview.net/profile?id=~Ashritha_Gonuguntla1">Ashritha Gonuguntla</a> · Carnegie Mellon University</p>
+  <nav class="links">
+    <a href="https://openreview.net/forum?id=8gqqiNrzyA">Paper &amp; reviews</a>
+    <a href="https://github.com/AshrithaG/replay-gap">Code</a>
+    <a href="#data" class="muted">Dataset</a>
+    <a href="#results">Results</a>
+  </nav>
+</header>
+
+<section>
+  <div class="tldr">
+    <p><strong>Every LLM-routing benchmark scores routers by replaying pre-collected model outputs.</strong>
+    Inside a multi-step agent that is unsound: swap the model at step <em>k</em> and everything after it
+    changes. This work forks live agent trajectories to measure what replay hides.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The problem</h2>
+  <p class="lead">Routing is now infrastructure — pick a cheap model for easy work, an expensive one for
+  hard work. Increasingly that choice is made <em>per step</em> inside an agent.</p>
+  <p>But routers are evaluated the way single-turn routers are: collect each model's logged output once,
+  then score a router by looking up the outputs it would have chosen. For a standalone question that is
+  sound, because the question doesn't depend on the router's choice. For an agent it isn't. The action at
+  step <em>k</em> determines the observation at step <em>k</em>+1 — the trajectory is a closed loop through
+  the environment. Replay silently assumes an open loop.</p>
+  <p>Everyone assumes some error here. Nobody had measured it, because ground truth requires actually
+  forking the trajectory and rolling each candidate forward in its own environment.</p>
+
+  <h3>Branching rollouts</h3>
+  <p>Run a base trajectory to completion. Fork it at a chosen step: start a fresh container, re-execute the
+  recorded prefix actions, seed the message history so the incoming model sees exactly what the base model
+  saw, then continue live with a <strong>different</strong> model. Every fork is paired with a
+  <strong>same-model control fork</strong>, which absorbs sampling noise, batching nondeterminism, and
+  environment-replay drift — so divergence caused by the swap is read relative to that floor.</p>
+  <p>Six seed-matched run pairs on SWE-bench Verified: ~900 containerized rollouts, 717 scored branch pairs,
+  two swap directions, two fork depths, three difficulty/prompt tiers.</p>
+</section>
+
+<section id="results">
+  <h2>What we found</h2>
+  <ul class="findings">
+    <li><span class="num">74–77%</span><p>of early swaps diverge at the <strong>very first</strong> post-fork
+      action — against 6–35% for matched controls.</p></li>
+    <li><span class="num">3%</span><p>of replayed post-fork states remain valid after an early swap. A replay
+      evaluator scores the other 97% against a world that never happens.</p></li>
+    <li><span class="num">5 / 0</span><p>outcome flips in swap arms versus <strong>zero</strong> across 359
+      same-model control forks.</p></li>
+    <li><span class="num">0-for-5</span><p>success-relevant calls by a log-stitching replay evaluator —
+      strictly worse than a constant-failure predictor.</p></li>
+    <li><span class="num">99.99%</span><p>return-code agreement when rebuilding pre-fork environments
+      (11,702 replayed actions), so the divergence isn't reconstruction error.</p></li>
+  </ul>
+
+  <figure>
+    <img src="paper/figures/fig1_divergence.png" alt="Bar chart: post-fork action edit distance for swaps versus same-model controls, by direction and fork position.">
+    <figcaption>Post-fork divergence by swap direction and fork position. Swaps (orange) exceed matched
+    controls (blue) in every arm; paired deltas +0.25 to +0.66, bootstrap CIs excluding zero under
+    multiplicity correction. Divergence shrinks the later you fork.</figcaption>
+  </figure>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Direction</th><th>control @early</th><th>swap @early</th><th>control @late</th><th>swap @late</th></tr></thead>
+    <tbody>
+      <tr><td>up (4B base → 14B)</td><td class="ctrl">0.674</td><td class="swap">0.941</td><td class="ctrl">0.489</td><td class="swap">0.752</td></tr>
+      <tr><td>down (14B base → 4B)</td><td class="ctrl">0.232</td><td class="swap">0.895</td><td class="ctrl">0.158</td><td class="swap">0.611</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <figure>
+    <img src="paper/figures/fig2_firstdiv.png" alt="ECDF of the first divergent post-fork action for swap and control branches.">
+    <figcaption>When branches first depart from the base trajectory. Swapped models re-decide almost
+    immediately; same-model controls drift much later, if at all.</figcaption>
+  </figure>
+
+  <h3>Two findings beyond routing</h3>
+  <p><strong>Temperature-0 “determinism” is a serving-stack property.</strong> Under identical decoding
+  settings, our AWQ-served controls reproduced their base trajectories near-exactly while FP8-served
+  controls diverged on 90–96% of forks. Any evaluation that assumes deterministic replay inherits this.</p>
+  <p><strong>A thoroughness tax.</strong> Under a tight step budget the <em>stronger</em> model more often
+  exhausted its budget without submitting (24/30 vs 17/30) — it explores and verifies more. Routing up can
+  reduce completion rate, which per-step routers optimizing quality-per-step will mis-price.</p>
+</section>
+
+<section id="data">
+  <h2>Code &amp; data</h2>
+  <p>The branching harness, all experiment configs, and every analysis script that produced the numbers
+  above are on <a href="https://github.com/AshrithaG/replay-gap">GitHub</a>. The full branched-trajectory
+  dataset — ~900 rollouts with per-step actions, observations, fork metadata, replay-fidelity logs, token
+  counts, patches, and SWE-bench outcomes — is released alongside it.</p>
+<pre><code>git clone https://github.com/AshrithaG/replay-gap
+cd replay-gap &amp;&amp; pip install -r requirements.txt
+python scripts/smoke_test.py    # validates the branching machinery, no GPU needed</code></pre>
+  <p>It is a deliberately controlled pilot: one scaffold, one benchmark family, two quantized models,
+  n=30 instances per run pair, and a 24GB serving budget that keeps absolute resolution rates low. The
+  action-level results don't depend on task success; the outcome-level evidence rests on five events and
+  is reported as such.</p>
+</section>
+
+<section>
+  <h2>Citation</h2>
+<pre><code>@inproceedings{gonuguntla2026replaygap,
+  title     = {The Replay Gap: Static Evaluation of Model Switching
+               in {LLM} Agents Scores the Wrong World},
+  author    = {Gonuguntla, Ashritha},
+  booktitle = {Efficient Reasoning Workshop at COLM},
+  year      = {2026},
+  url       = {https://openreview.net/forum?id=8gqqiNrzyA}
+}</code></pre>
+</section>
+
+<footer>
+  <p>Ashritha Gonuguntla · Carnegie Mellon University ·
+  <a href="https://openreview.net/forum?id=8gqqiNrzyA">OpenReview</a> ·
+  <a href="https://github.com/AshrithaG/replay-gap">GitHub</a></p>
+</footer>
+
+</div>
+<script>
+(function(){
+  var r=document.documentElement,b=document.getElementById("t");
+  b.onclick=function(){
+    var dark=r.getAttribute("data-theme")==="dark"||
+      (!r.getAttribute("data-theme")&&matchMedia("(prefers-color-scheme:dark)").matches);
+    r.setAttribute("data-theme",dark?"light":"dark");
+  };
+})();
+</script>
+</body>
+</html>
