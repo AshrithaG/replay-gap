@@ -1,0 +1,48 @@
+# Reverse easy-bucket pilot with a BUDGET NUDGE in the task prompt.
+# Purpose: prior runs ended in LimitsExceeded (20/29 fwd, 13/30 rev) with no
+# submission, starving outcome-level analysis. The nudge converts budget
+# deaths into real submissions. Branches inherit the nudged prompt through
+# the recorded prefix, so all arms see identical instructions.
+
+dataset: verified
+split: test
+difficulty: "<15 min fix"
+n_instances: 30
+seed: 42
+workers: 4
+fork_steps: [0.3, 0.7]
+
+base_model: large
+branch_models: [large, small]
+
+instance_template_append: |
+  <budget>
+  IMPORTANT: You have a hard budget of {{step_limit}} responses for this
+  entire task. Pace yourself: stop investigating by response 30, make your
+  code edits, and by response 40 you MUST create patch.txt, verify it, and
+  submit it with the exact submission command. Submitting an imperfect patch
+  is always better than submitting nothing.
+  </budget>
+
+pool:
+  small:
+    model_name: "hosted_vllm/Qwen/Qwen3-4B-Instruct-2507-FP8"
+    api_base: "http://localhost:8001/v1"
+    temperature: 0.0
+    max_tokens: 2048
+  large:
+    model_name: "hosted_vllm/Qwen/Qwen3-14B-AWQ"
+    api_base: "http://localhost:8002/v1"
+    temperature: 0.0
+    max_tokens: 2048
+    model_kwargs:
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: false
+
+overrides:
+  agent:
+    step_limit: 50
+    cost_limit: 0
+  environment:
+    timeout: 120

@@ -1,0 +1,50 @@
+# Replay-Gap pilot configuration.
+# Anything under `overrides:` is recursively merged into mini-swe-agent's
+# builtin swebench.yaml (agent templates, docker env, observation templates).
+
+dataset: verified          # princeton-nlp/SWE-Bench_Verified
+split: test
+n_instances: 30            # pilot size; bump for the real run
+seed: 42
+workers: 3                 # parallel instances; keep low on a single 24GB GPU (KV cache is tight)
+
+# Where to fork. Floats = fraction of the base trajectory's assistant steps
+# (0.3 -> 30% of the way in), ints = absolute step numbers.
+fork_steps: [0.3, 0.7]
+
+# Which pool model produces the base trajectories.
+base_model: small
+
+# Branch arms at every fork step. Keeping `small` in the list is REQUIRED:
+# it's the same-model control that measures the sampling/replay noise floor.
+branch_models: [small, large]
+
+# Self-hosted models behind vLLM OpenAI-compatible servers (scripts/serve_models.sh).
+# model_name syntax is litellm's: hosted_vllm/<name as served by vLLM>.
+# Sized for a single 24GB GPU (RTX 4090): both models co-resident.
+pool:
+  small:
+    model_name: "hosted_vllm/Qwen/Qwen3-4B-Instruct-2507-FP8"
+    api_base: "http://localhost:8001/v1"
+    temperature: 0.0
+    max_tokens: 2048   # smaller output reservation = ~2k more usable input context
+  large:
+    # Official Qwen AWQ 4-bit. Quantization is a mild capability confound —
+    # note it in the writeup. extra_body rides along on every request and
+    # tells vLLM's chat template to skip Qwen3's <think> mode.
+    model_name: "hosted_vllm/Qwen/Qwen3-14B-AWQ"
+    api_base: "http://localhost:8002/v1"
+    temperature: 0.0
+    max_tokens: 2048   # smaller output reservation = ~2k more usable input context
+    model_kwargs:
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: false
+  # On a bigger GPU (>=80GB), prefer: large = Qwen/Qwen3-Coder-30B-A3B-Instruct.
+
+overrides:
+  agent:
+    step_limit: 50        # pilot budget; swebench default is 250
+    cost_limit: 0         # disabled (self-hosted; no $ cost tracked)
+  environment:
+    timeout: 120

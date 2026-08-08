@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+runs/
+logs/
+results/reports/
+paper/latex/*.aux
+paper/latex/*.log
+paper/latex/*.out
+paper/latex/*.bbl
+paper/latex/*.blg
+paper/latex/*.zip
+.DS_Store

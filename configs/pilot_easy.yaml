@@ -1,0 +1,37 @@
+# Forward pilot on the EASY bucket of SWE-bench Verified ("<15 min fix").
+# Purpose: escape the capability floor (both full-difficulty pilots resolved
+# 0/30) so outcome flips become measurable. base = small, swap UP.
+
+dataset: verified
+split: test
+difficulty: "<15 min fix"
+n_instances: 30
+seed: 42
+workers: 4
+fork_steps: [0.3, 0.7]
+
+base_model: small
+branch_models: [small, large]
+
+pool:
+  small:
+    model_name: "hosted_vllm/Qwen/Qwen3-4B-Instruct-2507-FP8"
+    api_base: "http://localhost:8001/v1"
+    temperature: 0.0
+    max_tokens: 2048
+  large:
+    model_name: "hosted_vllm/Qwen/Qwen3-14B-AWQ"
+    api_base: "http://localhost:8002/v1"
+    temperature: 0.0
+    max_tokens: 2048
+    model_kwargs:
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: false
+
+overrides:
+  agent:
+    step_limit: 50
+    cost_limit: 0
+  environment:
+    timeout: 120

@@ -1,0 +1,38 @@
+# Reverse-direction pilot: base = LARGE model, swap DOWN to small.
+# Rationale: the forward pilot hit a capability floor (small base resolved 0/30,
+# so outcome flips were unmeasurable). With the stronger base, downgrade flips
+# (resolved -> unresolved after swapping to the small model) become observable.
+# Control arm = large (same-model) branches.
+
+dataset: verified
+split: test
+n_instances: 30
+seed: 42            # same instances as the forward pilot, deliberately
+workers: 4          # 14B is slower; don't oversubscribe it
+fork_steps: [0.3, 0.7]
+
+base_model: large
+branch_models: [large, small]
+
+pool:
+  small:
+    model_name: "hosted_vllm/Qwen/Qwen3-4B-Instruct-2507-FP8"
+    api_base: "http://localhost:8001/v1"
+    temperature: 0.0
+    max_tokens: 2048
+  large:
+    model_name: "hosted_vllm/Qwen/Qwen3-14B-AWQ"
+    api_base: "http://localhost:8002/v1"
+    temperature: 0.0
+    max_tokens: 2048
+    model_kwargs:
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: false
+
+overrides:
+  agent:
+    step_limit: 50
+    cost_limit: 0
+  environment:
+    timeout: 120

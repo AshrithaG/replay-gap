@@ -1,0 +1,4 @@
+# Orchestrator deps (the VM additionally needs: docker, and vLLM for serving — see README)
+mini-swe-agent==2.4.5
+datasets
+pyyaml
