@@ -11,3 +11,5 @@ paper/latex/*.bbl
 paper/latex/*.blg
 paper/latex/*.zip
 .DS_Store
+docs/PROJECT.md
+docs/FOLLOWUP.md
