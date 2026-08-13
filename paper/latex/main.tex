@@ -1,7 +1,7 @@
 \documentclass{article}
-% [submission] = anonymous + line numbers (review). [preprint] = named, for
-% the camera-ready and the arXiv posting.
-\usepackage[preprint]{colm2026_conference}
+% [submission] = anonymous + line numbers (review); [preprint] = named, header
+% "Preprint. Under review."; [final] = named, published header (camera-ready).
+\usepackage[final]{colm2026_conference}
 
 \usepackage{microtype}
 \usepackage{xcolor}
@@ -22,6 +22,9 @@ Carnegie Mellon University \\
 
 \begin{document}
 \maketitle
+% Per the program chairs' camera-ready instructions, override the default
+% "Published as a conference paper at COLM 2026" header with the workshop's.
+\lhead{Published at the COLM 2026 Workshop on Efficient Reasoning}
 
 \begin{center}
 \vspace{-1.5em}
