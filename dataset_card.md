@@ -82,9 +82,12 @@ configurations, not pure model scales. One scaffold, one benchmark family.
   author    = {Gonuguntla, Ashritha},
   booktitle = {Efficient Reasoning Workshop at COLM},
   year      = {2026},
-  url       = {https://openreview.net/forum?id=8gqqiNrzyA}
+  eprint    = {2608.08239},
+  archivePrefix = {arXiv},
+  url       = {https://arxiv.org/abs/2608.08239}
 }
 ```
 
+Paper: https://arxiv.org/abs/2608.08239
 Code: https://github.com/AshrithaG/replay-gap
 Project page: https://ashrithag.github.io/replay-gap/

@@ -3,7 +3,8 @@
 **Static evaluation of model switching in LLM agents scores the wrong world.**
 
 Accepted at the [Efficient Reasoning Workshop @ COLM 2026](https://wdlctc.github.io/efficient-reasoning-2026/) ·
-[Paper](https://openreview.net/forum?id=8gqqiNrzyA) ·
+[arXiv](https://arxiv.org/abs/2608.08239) ·
+[OpenReview](https://openreview.net/forum?id=8gqqiNrzyA) ·
 [Project page](https://ashrithag.github.io/replay-gap/) ·
 [Dataset](https://huggingface.co/datasets/ashritha0907/replay-gap-trajectories)
 
@@ -104,7 +105,10 @@ idx = load_dataset("ashritha0907/replay-gap-trajectories", data_files="rollouts_
   author    = {Gonuguntla, Ashritha},
   booktitle = {Efficient Reasoning Workshop at COLM},
   year      = {2026},
-  url       = {https://openreview.net/forum?id=8gqqiNrzyA}
+  eprint    = {2608.08239},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  url       = {https://arxiv.org/abs/2608.08239}
 }
 ```
 
